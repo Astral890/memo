@@ -1,0 +1,2 @@
+C:/Users/mbatres/IdeaProjects/memo/memo/android/app/.cxx/RelWithDebInfo/23273p1h/x86/CMakeFiles/edit_cache.dir
+C:/Users/mbatres/IdeaProjects/memo/memo/android/app/.cxx/RelWithDebInfo/23273p1h/x86/CMakeFiles/rebuild_cache.dir
