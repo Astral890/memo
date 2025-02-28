@@ -6,9 +6,9 @@ import 'package:flip_card/flip_card.dart';
 
 class Parrilla extends StatefulWidget {
   final Nivel? nivel;
-  final VoidCallback actualizarMoves, actualizarPares;
+  final VoidCallback actualizarMoves, actualizarPares, mostrarResultado;
 
-  const Parrilla(this.nivel, this.actualizarMoves(), this.actualizarPares(), {Key? key}) : super(key: key);
+  const Parrilla(this.nivel, this.actualizarMoves(), this.actualizarPares(), this.mostrarResultado, {Key? key}) : super(key: key);
 
   @override
   _ParrillaState createState() => _ParrillaState();
@@ -28,7 +28,7 @@ class _ParrillaState extends State<Parrilla>  {
     barajar(widget.nivel!);
     prevclicked = -1;
     flag = false;
-    habilitado = true;
+    habilitado = false;
     switch(widget.nivel!){
       case Nivel.facil:
         totales=8;
@@ -43,6 +43,22 @@ class _ParrillaState extends State<Parrilla>  {
         totales=18;
         break;
     }
+    Future.delayed(Duration(seconds: 3), () {
+      setState(() {
+        for (int i = 0; i < baraja.length; i++) {
+          controles[i].toggleCard();
+        }
+        habilitado = true; // Habilitar interacción después de voltear
+      });
+    });
+  }
+
+  bool checkWin(){
+    bool tmp=false;
+    if(totales==restantes){
+      tmp=!tmp;
+    }
+    return tmp;
   }
 
   @override
@@ -55,6 +71,11 @@ class _ParrillaState extends State<Parrilla>  {
       itemBuilder: (context, index) {
         return FlipCard(
             onFlip: () {
+              if (!habilitado!) return; // Bloquea el clic si aún no está habilitado
+              setState(() {
+                habilitado = false;
+              });
+
               if (!flag!) {
                 prevclicked = index;
                 estados[index] = false;
@@ -74,6 +95,10 @@ class _ParrillaState extends State<Parrilla>  {
                   debugPrint("clicked:Son iguales");
                   ++moves;
                   ++restantes;
+                  if(checkWin()){
+                    widget.mostrarResultado();
+                    restantes=0;
+                  }
                   widget.actualizarMoves();
                   widget.actualizarPares();
                   debugPrint("moves: $moves");
@@ -106,8 +131,8 @@ class _ParrillaState extends State<Parrilla>  {
             // autoFlipDuration: const Duration(milliseconds: 500),
             flipOnTouch: habilitado! ? estados.elementAt(index) : false,
             //side: CardSide.FRONT,
-            front: Image.asset("images/quest.png"),
-            back: Image.asset(baraja[index]));
+            back: Image.asset("images/quest.png"),
+            front: Image.asset(baraja[index]));
       },
     );
   }
