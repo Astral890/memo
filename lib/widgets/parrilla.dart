@@ -11,11 +11,12 @@ class Parrilla extends StatefulWidget {
   const Parrilla(this.nivel, this.actualizarMoves(), this.actualizarPares(), this.mostrarResultado, {Key? key}) : super(key: key);
 
   @override
-  _ParrillaState createState() => _ParrillaState();
+  ParrillaState createState() => ParrillaState();
 }
 
-class _ParrillaState extends State<Parrilla>  {
+class ParrillaState extends State<Parrilla>  {
   int? prevclicked;
+
   bool? flag, habilitado;
 
   @override
@@ -59,6 +60,27 @@ class _ParrillaState extends State<Parrilla>  {
       tmp=!tmp;
     }
     return tmp;
+  }
+
+  void reset(){
+    setState(() {
+      for (int i = 0; i < baraja.length; i++) {
+        if (!estados[i]) {
+          controles[i].toggleCard();
+          estados[i]=true;
+        }
+      }
+      prevclicked = -1;
+      flag = false;
+      habilitado = false;
+      moves=0;
+      restantes=0;
+    });
+    Future.delayed(Duration(seconds: 3), () {
+      setState(() {
+        habilitado = true;
+      });
+    });
   }
 
   @override
