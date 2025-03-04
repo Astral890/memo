@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:memo/config/config.dart';
 import 'package:memo/db/sqlite.dart';
 import 'package:memo/widgets/parrilla.dart';
@@ -28,7 +29,7 @@ class _TableroState extends State<Tablero> {
   ScrollController _scrollController = ScrollController();
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
     moves = 0;
     startTimer();
@@ -68,8 +69,8 @@ class _TableroState extends State<Tablero> {
     setState(() {});
   }
 
-  Future<void> getData() async{
-    info=await Sqlite.ver();
+  Future<void> getData() async {
+    info = await Sqlite.ver();
     setState(() {});
   }
 
@@ -126,9 +127,51 @@ class _TableroState extends State<Tablero> {
     pKey.currentState?.reset();
   }
 
-  void newGame() {
+  void newGame() async {
     reiniciar();
+    Datos? rec = await Sqlite.ver();
+    Datos x = Datos(
+        id: 1,
+        fecha: DateFormat('yyyy-MM-dd').format(DateTime.now()),
+        victorias: rec!.victorias,
+        derrotas: rec.derrotas! + 1);
+    await Sqlite().update(x);
     debugPrint("Lose: Perdiste negro");
+  }
+
+  Future<void> confirmacion(
+      BuildContext context, String message, Function onConfirm) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Confirmar'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text(message),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cancelar'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Continuar'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                onConfirm();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -148,7 +191,7 @@ class _TableroState extends State<Tablero> {
         children: [
           AnimatedContainer(
             duration: Duration(milliseconds: 300),
-            width: isSideMenuExpanded ? 250.0 : 0,
+            width: isSideMenuExpanded ? 175.0 : 0,
             color: Colors.blue,
             child: isSideMenuExpanded
                 ? Column(
@@ -161,12 +204,15 @@ class _TableroState extends State<Tablero> {
                         ),
                         title: Text('Salir'),
                         onTap: () {
-                          if (Platform.isAndroid || Platform.isIOS) {
-                            SystemNavigator.pop();
-                          }
-                          if (Platform.isLinux || Platform.isWindows) {
-                            exit(0);
-                          }
+                          confirmacion(
+                              context, "Estas seguro que deseas salir?", () {
+                            if (Platform.isAndroid || Platform.isIOS) {
+                              SystemNavigator.pop();
+                            }
+                            if (Platform.isLinux || Platform.isWindows) {
+                              exit(0);
+                            }
+                          });
                         },
                       ),
                       ListTile(
@@ -177,7 +223,8 @@ class _TableroState extends State<Tablero> {
                         ),
                         title: Text("Reiniciar"),
                         onTap: () {
-                          reiniciar();
+                          confirmacion(context,
+                              "Estas seguro que deseas reiniciar?", reiniciar);
                         },
                       ),
                       ListTile(
@@ -188,39 +235,45 @@ class _TableroState extends State<Tablero> {
                         ),
                         title: Text('Consultar'),
                         onTap: () {
-                          showDialog(
-                            context: context,
-                            barrierDismissible: true,
-                            builder: (BuildContext context) {
-                              return AlertDialog(
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(15)),
-                                title: Text("Display de informacion"),
-                                content: Column(
-                                  children: [
-                                    ListTile(
-                                      leading: Icon(Icons.date_range_rounded),
-                                      title: Text("Fecha"),
-                                      subtitle: Text(
-                                          info?.fecha.toString()??"Cargando"), // Aquí se añade el texto "ES HOY" como subtítulo
-                                    ),
-                                    ListTile(
-                                      leading: Icon(Icons.thumb_up),
-                                      title: Text("Victorias"),
-                                      subtitle: Text(
-                                          info?.victorias.toString()??"Cargando"), // Aquí se añade el número de victorias como subtítulo
-                                    ),
-                                    ListTile(
-                                      leading: Icon(Icons.thumb_down),
-                                      title: Text("Derrotas"),
-                                      subtitle: Text(
-                                          info?.derrotas.toString()??"Cargando"), // Aquí se añade el número de derrotas como subtítulo
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          );
+                          confirmacion(
+                              context, "Estas seguro que deseas seguir?", () async {
+                                await getData();
+                            showDialog(
+                              context: context,
+                              barrierDismissible: true,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(15)),
+                                  title: Text("Display de informacion"),
+                                  content: Column(
+                                    children: [
+                                      ListTile(
+                                        leading: Icon(Icons.date_range_rounded),
+                                        title: Text("Fecha"),
+                                        subtitle: Text(info?.fecha.toString() ??
+                                            "Cargando"),
+                                      ),
+                                      ListTile(
+                                        leading: Icon(Icons.thumb_up),
+                                        title: Text("Victorias"),
+                                        subtitle: Text(info?.victorias
+                                                .toString() ??
+                                            "Cargando"),
+                                      ),
+                                      ListTile(
+                                        leading: Icon(Icons.thumb_down),
+                                        title: Text("Derrotas"),
+                                        subtitle: Text(info?.derrotas
+                                                .toString() ??
+                                            "Cargando"),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            );
+                          });
                         },
                       ),
                       ListTile(
@@ -231,7 +284,10 @@ class _TableroState extends State<Tablero> {
                         ),
                         title: Text('Juego nuevo'),
                         onTap: () {
-                          newGame();
+                          confirmacion(
+                              context,
+                              "Estas seguro de que quieres continuar? Se marcara como juego perdido",
+                              newGame);
                         },
                       )
                     ],
@@ -252,6 +308,32 @@ class _TableroState extends State<Tablero> {
           ),
         ],
       ),
+      bottomNavigationBar: BottomAppBar(
+          color: Colors.blue,
+          height: 60,
+          child: Row(
+            children: [
+              IconButton(
+                icon: Icon(Icons.exit_to_app),
+                onPressed: () {
+                  if (Platform.isAndroid || Platform.isIOS) {
+                    SystemNavigator.pop();
+                  }
+                  if (Platform.isLinux || Platform.isWindows) {
+                    exit(0);
+                  }
+                },
+              ),
+              IconButton(
+                icon: Icon(Icons.restart_alt),
+                onPressed: reiniciar,
+              ),
+              IconButton(
+                icon: Icon(Icons.not_started),
+                onPressed: newGame,
+              ),
+            ],
+          )),
     );
   }
 }

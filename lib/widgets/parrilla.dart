@@ -1,20 +1,27 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:memo/db/sqlite.dart';
 import '../config/config.dart';
 import 'package:flip_card/flip_card.dart';
+
+import '../db/datos.dart';
 
 class Parrilla extends StatefulWidget {
   final Nivel? nivel;
   final VoidCallback actualizarMoves, actualizarPares, mostrarResultado;
 
-  const Parrilla(this.nivel, this.actualizarMoves(), this.actualizarPares(), this.mostrarResultado, {Key? key}) : super(key: key);
+  const Parrilla(this.nivel, this.actualizarMoves(), this.actualizarPares(),
+      this.mostrarResultado,
+      {Key? key})
+      : super(key: key);
 
   @override
   ParrillaState createState() => ParrillaState();
 }
 
-class ParrillaState extends State<Parrilla>  {
+class ParrillaState extends State<Parrilla> {
   int? prevclicked;
 
   bool? flag, habilitado;
@@ -30,18 +37,18 @@ class ParrillaState extends State<Parrilla>  {
     prevclicked = -1;
     flag = false;
     habilitado = false;
-    switch(widget.nivel!){
+    switch (widget.nivel!) {
       case Nivel.facil:
-        totales=8;
+        totales = 8;
         break;
       case Nivel.medio:
-        totales=12;
+        totales = 12;
         break;
       case Nivel.dificil:
-        totales=16;
+        totales = 16;
         break;
       case Nivel.imposible:
-        totales=18;
+        totales = 18;
         break;
     }
     Future.delayed(Duration(seconds: 3), () {
@@ -54,27 +61,31 @@ class ParrillaState extends State<Parrilla>  {
     });
   }
 
-  bool checkWin(){
-    bool tmp=false;
-    if(totales==restantes){
-      tmp=!tmp;
+  Future<bool> checkWin() async {
+    bool tmp = false;
+    if (totales == restantes) {
+      Datos? rec = await Sqlite.ver();
+      tmp = !tmp;
+      Datos x =
+          Datos(id: 1, fecha: DateFormat('yyyy-MM-dd').format(DateTime.now()),victorias: rec!.victorias!+1,derrotas: rec.derrotas);
+      await Sqlite().update(x);
     }
     return tmp;
   }
 
-  void reset(){
+  void reset() {
     setState(() {
       for (int i = 0; i < baraja.length; i++) {
         if (!estados[i]) {
           controles[i].toggleCard();
-          estados[i]=true;
+          estados[i] = true;
         }
       }
       prevclicked = -1;
       flag = false;
       habilitado = false;
-      moves=0;
-      restantes=0;
+      moves = 0;
+      restantes = 0;
     });
     Future.delayed(Duration(seconds: 3), () {
       setState(() {
@@ -92,7 +103,7 @@ class ParrillaState extends State<Parrilla>  {
           SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 4),
       itemBuilder: (context, index) {
         return FlipCard(
-            onFlip: () {
+            onFlip: () async {
               if (!habilitado!) return;
               setState(() {
                 habilitado = false;
@@ -117,9 +128,9 @@ class ParrillaState extends State<Parrilla>  {
                   debugPrint("clicked:Son iguales");
                   ++moves;
                   ++restantes;
-                  if(checkWin()){
+                  if (await checkWin()) {
                     widget.mostrarResultado();
-                    restantes=0;
+                    restantes = 0;
                   }
                   widget.actualizarMoves();
                   widget.actualizarPares();
@@ -158,5 +169,4 @@ class ParrillaState extends State<Parrilla>  {
       },
     );
   }
-
 }

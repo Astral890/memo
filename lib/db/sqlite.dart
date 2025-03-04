@@ -12,6 +12,7 @@ class Sqlite {
   }
 
   static Future<Database> _openDB() async {
+    print("Path: ${await getDatabasesPath()}");
     return openDatabase(
       join(await getDatabasesPath(), 'datos.db'),
       onCreate: (db, version) async {
