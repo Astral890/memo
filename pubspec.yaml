@@ -37,6 +37,7 @@ dependencies:
   #10 feb 2025
   flip_card: ^0.7.0
   after_layout: ^1.2.0
+  sqflite:
 
 dev_dependencies:
   flutter_test:

@@ -1,0 +1,2 @@
+/home/astral89/Documentos/5to Cuatri/Milton/2da unidad/memo/android/app/.cxx/Debug/4u5u1so6/x86_64/CMakeFiles/edit_cache.dir
+/home/astral89/Documentos/5to Cuatri/Milton/2da unidad/memo/android/app/.cxx/Debug/4u5u1so6/x86_64/CMakeFiles/rebuild_cache.dir

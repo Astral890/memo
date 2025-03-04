@@ -49,7 +49,7 @@ class ParrillaState extends State<Parrilla>  {
         for (int i = 0; i < baraja.length; i++) {
           controles[i].toggleCard();
         }
-        habilitado = true; // Habilitar interacción después de voltear
+        habilitado = true;
       });
     });
   }
@@ -93,7 +93,7 @@ class ParrillaState extends State<Parrilla>  {
       itemBuilder: (context, index) {
         return FlipCard(
             onFlip: () {
-              if (!habilitado!) return; // Bloquea el clic si aún no está habilitado
+              if (!habilitado!) return;
               setState(() {
                 habilitado = false;
               });

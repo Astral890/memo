@@ -4,12 +4,15 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:memo/config/config.dart';
+import 'package:memo/db/sqlite.dart';
 import 'package:memo/widgets/parrilla.dart';
 
 import '../app/home.dart';
+import '../db/datos.dart';
 
 class Tablero extends StatefulWidget {
   final Nivel? nivel;
+
   const Tablero(this.nivel, {Key? key}) : super(key: key);
 
   @override
@@ -19,17 +22,17 @@ class Tablero extends StatefulWidget {
 class _TableroState extends State<Tablero> {
   final GlobalKey<ParrillaState> pKey = GlobalKey();
   int segundos = 0;
+  Datos? info;
   Timer? timer;
-  bool isSideMenuExpanded =
-      false; // Estado para controlar la expansión del SideMenu
-  ScrollController _scrollController =
-      ScrollController(); // Controlador de desplazamiento
+  bool isSideMenuExpanded = false;
+  ScrollController _scrollController = ScrollController();
 
   @override
-  void initState() {
+  void initState(){
     super.initState();
     moves = 0;
     startTimer();
+    getData();
   }
 
   void startTimer() {
@@ -47,7 +50,7 @@ class _TableroState extends State<Tablero> {
   @override
   void dispose() {
     stopTimer();
-    _scrollController.dispose(); // Limpia el controlador de desplazamiento
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -65,10 +68,15 @@ class _TableroState extends State<Tablero> {
     setState(() {});
   }
 
+  Future<void> getData() async{
+    info=await Sqlite.ver();
+    setState(() {});
+  }
+
   void mostrarResultado(BuildContext context) {
     showDialog(
       context: context,
-      barrierDismissible: false, // Evita que se cierre tocando fuera
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
           shape:
@@ -141,6 +149,7 @@ class _TableroState extends State<Tablero> {
           AnimatedContainer(
             duration: Duration(milliseconds: 300),
             width: isSideMenuExpanded ? 250.0 : 0,
+            color: Colors.blue,
             child: isSideMenuExpanded
                 ? Column(
                     children: [
@@ -153,8 +162,6 @@ class _TableroState extends State<Tablero> {
                         title: Text('Salir'),
                         onTap: () {
                           if (Platform.isAndroid || Platform.isIOS) {
-                            // Navigator.pop(context);
-                            //SystemChannels.platform.invokeMethod('SystemNavigator.pop');
                             SystemNavigator.pop();
                           }
                           if (Platform.isLinux || Platform.isWindows) {
@@ -183,27 +190,31 @@ class _TableroState extends State<Tablero> {
                         onTap: () {
                           showDialog(
                             context: context,
-                            barrierDismissible: false,
+                            barrierDismissible: true,
                             builder: (BuildContext context) {
                               return AlertDialog(
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(15)),
                                 title: Text("Display de informacion"),
                                 content: Column(
-                                  children: [ListTile(
-                                    leading: Icon(Icons.date_range_rounded),
-                                    title: Text("Fecha"),
-                                    subtitle: Text("ES HOY"), // Aquí se añade el texto "ES HOY" como subtítulo
-                                  ),
+                                  children: [
+                                    ListTile(
+                                      leading: Icon(Icons.date_range_rounded),
+                                      title: Text("Fecha"),
+                                      subtitle: Text(
+                                          info?.fecha.toString()??"Cargando"), // Aquí se añade el texto "ES HOY" como subtítulo
+                                    ),
                                     ListTile(
                                       leading: Icon(Icons.thumb_up),
                                       title: Text("Victorias"),
-                                      subtitle: Text("5"), // Aquí se añade el número de victorias como subtítulo
+                                      subtitle: Text(
+                                          info?.victorias.toString()??"Cargando"), // Aquí se añade el número de victorias como subtítulo
                                     ),
                                     ListTile(
                                       leading: Icon(Icons.thumb_down),
                                       title: Text("Derrotas"),
-                                      subtitle: Text("36"), // Aquí se añade el número de derrotas como subtítulo
+                                      subtitle: Text(
+                                          info?.derrotas.toString()??"Cargando"), // Aquí se añade el número de derrotas como subtítulo
                                     ),
                                   ],
                                 ),
@@ -229,8 +240,7 @@ class _TableroState extends State<Tablero> {
           ),
           Expanded(
             child: SingleChildScrollView(
-              controller:
-                  _scrollController, // Asigna el controlador de desplazamiento
+              controller: _scrollController,
               child: Parrilla(
                 widget.nivel,
                 actualizarMoves,
