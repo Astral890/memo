@@ -205,7 +205,16 @@ class _TableroState extends State<Tablero> {
                         title: Text('Salir'),
                         onTap: () {
                           confirmacion(
-                              context, "Estas seguro que deseas salir?", () {
+                              context, "Estas seguro que deseas salir?",
+                              () async {
+                            Datos? rec = await Sqlite.ver();
+                            Datos x = Datos(
+                                id: 1,
+                                fecha: DateFormat('yyyy-MM-dd')
+                                    .format(DateTime.now()),
+                                victorias: rec!.victorias,
+                                derrotas: rec.derrotas);
+                            await Sqlite().update(x);
                             if (Platform.isAndroid || Platform.isIOS) {
                               SystemNavigator.pop();
                             }
@@ -236,8 +245,9 @@ class _TableroState extends State<Tablero> {
                         title: Text('Consultar'),
                         onTap: () {
                           confirmacion(
-                              context, "Estas seguro que deseas seguir?", () async {
-                                await getData();
+                              context, "Estas seguro que deseas seguir?",
+                              () async {
+                            await getData();
                             showDialog(
                               context: context,
                               barrierDismissible: true,
@@ -257,16 +267,16 @@ class _TableroState extends State<Tablero> {
                                       ListTile(
                                         leading: Icon(Icons.thumb_up),
                                         title: Text("Victorias"),
-                                        subtitle: Text(info?.victorias
-                                                .toString() ??
-                                            "Cargando"),
+                                        subtitle: Text(
+                                            info?.victorias.toString() ??
+                                                "Cargando"),
                                       ),
                                       ListTile(
                                         leading: Icon(Icons.thumb_down),
                                         title: Text("Derrotas"),
-                                        subtitle: Text(info?.derrotas
-                                                .toString() ??
-                                            "Cargando"),
+                                        subtitle: Text(
+                                            info?.derrotas.toString() ??
+                                                "Cargando"),
                                       ),
                                     ],
                                   ),
